@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}LearnFlow | Assessment - {{ quiz.title }}{% endblock %}
+
+{% block header %}Quiz: {{ quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="view-container">
+    <div style="max-width: 800px; margin: 0 auto;">
+        <!-- Quiz Header -->
+        <div class="quiz-header">
+            <div>
+                <div class="badge badge-emerald">Course Assessment</div>
+                <h1 style="font-size: 2rem; font-weight: 900; color: var(--gray-900); margin-top: 0.75rem;">{{ quiz.title }}</h1>
+                <p style="color: var(--gray-500); font-size: 1rem; margin-top: 0.5rem;">Please answer all questions below to complete this module.</p>
+            </div>
+            <div style="text-align: right;">
+                <p style="font-size: 0.75rem; font-weight: 700; color: var(--gray-400); text-transform: uppercase;">Required Score</p>
+                <p style="font-size: 2.25rem; font-weight: 900; color: var(--emerald-600); line-height: 1;">{{ quiz.pass_score }}%</p>
+            </div>
+        </div>
+
+        <form method="POST" action="">
+            {% csrf_token %}
+            <div style="display: flex; flex-direction: column; gap: 2rem;">
+                {% for question in quiz.questions.all %}
+                <div style="background: white; padding: 2rem; border-radius: 1.5rem; border: 1px solid var(--gray-100); position: relative;">
+                    <!-- Question Number Badge -->
+                    <div style="position: absolute; left: -1rem; top: 2rem; width: 2.5rem; height: 2.5rem; background: var(--gray-900); color: white; display: flex; align-items: center; justify-content: center; border-radius: 0.75rem; font-weight: 900; box-shadow: var(--shadow-md);">
+                        {{ forloop.counter }}
+                    </div>
+                    
+                    <div style="margin-left: 2rem;">
+                        <h4 style="font-size: 1.25rem; font-weight: 800; color: var(--gray-900); margin-bottom: 1.5rem; line-height: 1.4;">
+                            {{ question.text }}
+                        </h4>
+
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            {% for choice in question.choices.all %}
+                            <label class="option-label">
+                                <input type="radio" name="question_{{ question.id }}" value="{{ choice.id }}" class="option-input">
+                                <span style="font-size: 1.0625rem; font-weight: 600; color: var(--gray-700);">{{ choice.text }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div style="text-align: center; padding: 4rem; background: white; border-radius: 1.5rem; border: 2px dashed var(--gray-100);">
+                    <p style="color: var(--gray-400); font-weight: 700;">No questions published for this quiz yet.</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Submit Section -->
+            <div style="margin-top: 4rem; display: flex; justify-content: center; padding-bottom: 4rem;">
+                <button type="submit" class="btn btn-primary" style="padding: 1.25rem 4rem; font-size: 0.875rem; width: auto; border-radius: 1rem;">
+                    Submit Assessment
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

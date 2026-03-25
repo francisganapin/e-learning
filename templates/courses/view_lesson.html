@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lesson.title }} | LearnFlow{% endblock %}
+
+{% block header %}{{ lesson.title }}{% endblock %}
+
+{% load youtube_filter %}
+{% load markdown_to_html %}
+
+
+{% block content %}
+<div class="view-container">
+    <div style="max-width: 900px; margin: 0 auto;">
+        <!-- Lesson Header -->
+        <div class="detail-header">
+            <div class="badge badge-emerald">Lesson Content</div>
+            <h1 class="detail-title">{{ lesson.title }}</h1>
+        </div>
+
+        {% if lesson.video_file %}
+            <!-- If you uploaded a file directly -->
+            <video width="100%" controls style="border-radius: 1.5rem; background: black;">
+                <source src="{{ lesson.video_file.url }}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        {% elif lesson.video_url %}
+            <!-- If you provided a YouTube/external link -->
+            <iframe src="{{ lesson.video_url|to_embed_url }}" ...></iframe>
+        {% endif %}
+
+
+        <!-- Lesson Body -->
+        <div class="article-content">
+                {{ lesson.content|markdown|safe }}
+        </div>
+
+        <!-- Navigation Buttons -->
+  <!-- Replace your current Mark as Complete button with this -->
+        <form action="{% url 'courses:complete_lesson' lesson.id %}" method="POST">
+            {% csrf_token %}
+            {% if lesson.is_done %}
+                <button type="button" class="btn" style="background: var(--emerald-100); color: var(--emerald-700);" disabled>
+                    ✓ Completed
+                </button>
+            {% else %}
+                <button type="submit" class="btn btn-primary">
+                    Mark as Complete
+                </button>
+            {% endif %}
+        </form>
+    </div>
+</div>
+{% endblock %}
