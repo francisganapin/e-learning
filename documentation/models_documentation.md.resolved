@@ -1,0 +1,67 @@
+# LearnFlow: Course Models Documentation
+
+This document explains the data structure and logic behind the [courses/models.py](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py) file.
+
+## 1. Core Hierarchy
+The models follow a strict parent-child hierarchy to organize educational content:
+
+[Category](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#4-15) ➔ [Course](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#16-29) ➔ [Module](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#30-53) ➔ [Lesson](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#54-73) / [Quiz](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#74-91)
+
+---
+
+## 2. Model Definitions
+
+### Category
+Groups courses for easier browsing (e.g., "Web Development", "Data Science").
+- **Fields**: `title`, `slug` (unique identifier).
+
+### Course
+The main container for a subject.
+- **Relationships**: 
+    - `category`: FK to Category.
+    - `instructor`: FK to User.
+- **Fields**: `title`, `slug`, `overview`, `image`.
+
+### Module
+A chapter or section within a course.
+- **Relationships**: 
+    - [course](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/views.py#5-8): FK to Course.
+- **Property: [completion_percentage](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#47-53)**:
+    - Calculates progress based on the number of lessons marked as `is_done`.
+    - **Logic**: [(Done Lessons / Total Lessons) * 100](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#74-91).
+
+### Lesson
+Individual teaching units (Video/Text).
+- **Core logic**: 
+    - `is_done`: Boolean to track if a student finished the lesson.
+- **Fields**: `video_url`, `video_file`, `content` (Markdown support).
+
+### Quiz
+Assessments placed at the end of modules.
+- **Fields**:
+    - `pass_score`: Percentage needed to pass (default 70%).
+    - `number_of_try`: **Global counter** (Currently tracks total attempts across all users).
+
+### Question & Choice
+Individual quiz interactions.
+- **Question**: Belongs to a Quiz.
+- **Choice**: Belongs to a Question. Has an `is_correct` flag used for scoring.
+
+---
+
+## 3. Results & Tracking
+
+### QuizResult
+Persistent record of a student's attempt.
+- **Logic**: Created during [submit_quiz](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/views.py#39-82) view execution.
+- **Fields**:
+    - `user`: Which student took the quiz.
+    - `total_score`: Number of correct answers.
+    - [percentage](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#47-53): Calculated score.
+    - `is_passed`: Boolean based on `Quiz.pass_score`.
+
+---
+
+## 4. Logical Notes
+- **Ordering**: Modules, Lessons, and Quizzes all use an `order` field to ensure they appear in the correct sequence in the UI.
+- **Slug Fields**: Used for SEO-friendly URLs instead of showing numeric IDs.

@@ -1,0 +1,59 @@
+# Code Review: Daily Quiz Attempt Limit (3 Tries/Day)
+
+Here is the step-by-step breakdown of the changes for your review.
+
+## 1. Logic Added to [courses/models.py](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py)
+We added a helper method to handle the daily counting. 
+
+```python
+def get_user_attempts_today(self, user):
+    from django.utils import timezone
+    # 1. self.results uses the QuizResult table (related_name)
+    # 2. filter(user=user) only counts THIS student
+    # 3. created_at__date is a special Django lookup for the calendar date
+    return self.results.filter(user=user, created_at__date=timezone.now().date()).count()
+```
+*   **Why**: This logic is now in the **Model**, which keeps your **Views** clean and makes the count reusable anywhere in your app.
+
+---
+
+## 2. Updated [courses/views.py](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/views.py)
+
+### [view_quiz](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/views.py#33-47) Function
+Before the user sees the quiz, we check their daily limit:
+```python
+# 1. Identify the user
+user = request.user if request.user.is_authenticated else User.objects.first()
+# 2. Call our new model method
+user_attempts = quiz.get_user_attempts_today(user)
+
+# 3. Compare with limit (3)
+if user_attempts >= 3:
+    return render(request, 'courses/quiz_limit.html', {'quiz': quiz})
+```
+*   **Why**: This blocks the student before they even start the quiz.
+
+### [submit_quiz](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/views.py#50-100) Function
+We added the same check at the beginning of the submission process:
+```python
+user_attempts = quiz.get_user_attempts_today(user)
+if user_attempts >= 3:
+    return redirect('courses:view_quiz', quiz_id=quiz_id)
+```
+*   **Why**: This is a security fallback. It stops anyone who managed to submit after their limit was already reached (e.g., in a second tab).
+
+---
+
+## 3. New Template: [quiz_limit.html](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/templates/courses/quiz_limit.html)
+We created a new file in `templates/courses/` to show a friendly message.
+
+*   **Design**: It uses your existing base styles and provides buttons to go back to the course.
+*   **Result**: Instead of a generic error, the user sees a professional "Attempt Limit Reached" page.
+
+---
+
+## How the "Reset" Works
+1.  **Count for Today**: The query looks at `timezone.now().date()`.
+2.  **Midnight Passes**: The date changes.
+3.  **Count for Tomorrow**: The previous results are no longer counted (they are old dates), so the count naturally drops back to 0. 
+4.  **No Action Required**: You never have to manually reset or delete anything.

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz Result | LearnFlow{% endblock %}
+
+{% block header %}Result{% endblock %}
+
+{% block content %}
+<div class="view-container">
+    <div style="max-width: 580px; margin: 0 auto;">
+
+        <div style="background: white; border-radius: 1rem; padding: 2.5rem; text-align: center; border: 1px solid var(--gray-100);">
+
+            {% if result.is_passed %}
+            <!-- Passed -->
+            <div style="width: 3.5rem; height: 3.5rem; background: var(--emerald-100); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                <svg style="width: 1.75rem; height: 1.75rem; color: var(--emerald-600);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--gray-800); margin-bottom: 0.375rem;">
+                You passed!
+            </h1>
+            <p style="color: var(--gray-400); font-size: 0.875rem;">
+                Great work on this quiz.
+            </p>
+            {% else %}
+            <!-- Failed -->
+            <div style="width: 3.5rem; height: 3.5rem; background: #fef2f2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                <svg style="width: 1.75rem; height: 1.75rem; color: #dc2626;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </div>
+            <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--gray-800); margin-bottom: 0.375rem;">
+                Not quite
+            </h1>
+            <p style="color: var(--gray-400); font-size: 0.875rem;">
+                Review the material and try again.
+            </p>
+            {% endif %}
+
+            <!-- Scores -->
+            <div style="margin-top: 2rem; display: flex; justify-content: center; gap: 1.25rem;">
+                <div style="background: var(--gray-50); padding: 1.25rem 1.5rem; border-radius: 0.75rem; min-width: 100px;">
+                    <p style="font-size: 0.65rem; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.04em;">Score</p>
+                    <p style="font-size: 2rem; font-weight: 800; {% if result.is_passed %}color: var(--emerald-600);{% else %}color: #dc2626;{% endif %} line-height: 1.2; margin-top: 0.25rem;">
+                        {{ result.percentage }}%
+                    </p>
+                </div>
+                <div style="background: var(--gray-50); padding: 1.25rem 1.5rem; border-radius: 0.75rem; min-width: 100px;">
+                    <p style="font-size: 0.65rem; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.04em;">Correct</p>
+                    <p style="font-size: 2rem; font-weight: 800; color: var(--gray-800); line-height: 1.2; margin-top: 0.25rem;">
+                        {{ result.total_score }}/{{ result.total_questions }}
+                    </p>
+                </div>
+                <div style="background: var(--gray-50); padding: 1.25rem 1.5rem; border-radius: 0.75rem; min-width: 100px;">
+                    <p style="font-size: 0.65rem; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.04em;">Needed</p>
+                    <p style="font-size: 2rem; font-weight: 800; color: var(--gray-800); line-height: 1.2; margin-top: 0.25rem;">
+                        {{ quiz.pass_score }}%
+                    </p>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div style="margin-top: 2rem; display: flex; justify-content: center; gap: 0.75rem;">
+                {% if not result.is_passed %}
+                <a href="{% url 'courses:view_quiz' quiz.id %}" class="btn btn-primary" style="padding: 0.75rem 2rem; width: auto; border-radius: 0.625rem; text-decoration: none; font-size: 0.75rem;">
+                    Try Again
+                </a>
+                {% endif %}
+                <a href="{% url 'courses:view_module' quiz.module.course.id %}" style="padding: 0.75rem 2rem; font-size: 0.75rem; border-radius: 0.625rem; text-decoration: none; background: var(--gray-100); color: var(--gray-600); font-weight: 700; display: inline-block;">
+                    Back to Module
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

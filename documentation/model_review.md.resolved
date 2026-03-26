@@ -1,0 +1,112 @@
+# Full Model Review: Pros, Cons & Potential Problems
+
+Here is a model-by-model review of your current [models.py](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py).
+
+---
+
+## 1. [Category](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#4-15)
+```python
+class Category(models.Model):
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=200, unique=True)
+```
+| Pros | Cons / Problems |
+| :--- | :--- |
+| ✅ `slug` is unique — good for clean URLs | ⚠️ No `related_name` needed here, it's fine |
+| ✅ Has timestamps | ✅ No issues found |
+
+---
+
+## 2. [Course](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#16-29)
+```python
+category = models.ForeignKey(Category, related_name='courses', on_delete=models.CASCADE)
+instructor = models.ForeignKey(User, related_name='courses_created', on_delete=models.CASCADE)
+```
+| Pros | Cons / Problems |
+| :--- | :--- |
+| ✅ Good `related_name` choices | ⚠️ `on_delete=CASCADE` on instructor means if you delete the teacher, ALL their courses disappear. Consider `models.SET_NULL` with `null=True` |
+| ✅ Has image field | ✅ Slug is unique |
+
+---
+
+## 3. [Module](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#30-67)
+```python
+completion_percentage  # @property
+is_finished(self, user)  # method
+```
+| Pros | Cons / Problems |
+| :--- | :--- |
+| ✅ [is_finished](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#54-67) is per-user — great! | ❌ [completion_percentage](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#47-53) still uses `self.lessons.filter(is_done=True)` but you REMOVED `is_done` from Lesson! This will **crash**. You need to update it to use [UserLessonProgress](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#88-97) |
+| ✅ [is_finished](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#54-67) checks both lessons and quizzes | ❌ Same problem: [is_finished](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#54-67) line 57 still checks `self.lessons.filter(is_done=True)`. Needs to use [UserLessonProgress](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#88-97) too |
+
+---
+
+## 4. [Lesson](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#69-87)
+```python
+class Lesson(models.Model):
+    # is_done was REMOVED ✅
+```
+| Pros | Cons / Problems |
+| :--- | :--- |
+| ✅ You correctly removed `is_done` | ✅ Clean model now |
+| ✅ Has both `video_url` and `video_file` options | ⚠️ Minor: Having both video fields could confuse users. Consider picking one or adding a note |
+
+---
+
+## 5. [UserLessonProgress](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#88-97) ⭐ (NEW)
+```python
+class UserLessonProgress(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
+    is_done = models.BooleanField(default=False)
+```
+| Pros | Cons / Problems |
+| :--- | :--- |
+| ✅ Per-user tracking — professional! | ❌ **Missing `unique_together`!** Right now, you can accidentally create 5 rows for the same user + same lesson. You need to add this to prevent duplicates: |
+
+```python
+class Meta:
+    unique_together = ['user', 'lesson']
+```
+This ensures **one row per user per lesson**. Without it, your database could have duplicate entries.
+
+---
+
+## 6. [Quiz](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#102-124)
+```python
+number_of_try = models.IntegerField(default=0)  # OLD global counter
+get_user_attempts_today(self, user)  # NEW per-user method
+```
+| Pros | Cons / Problems |
+| :--- | :--- |
+| ✅ [get_user_attempts_today](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#120-124) is per-user and daily — great! | ⚠️ `number_of_try` field is still in the model but no longer used. It's "dead code". You can remove it later and make a migration |
+
+---
+
+## 7. [Question](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#126-136) & [Choice](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#137-144)
+| Pros | Cons / Problems |
+| :--- | :--- |
+| ✅ Clean and simple | ⚠️ [Choice](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#137-144) has no protection against having zero correct answers or multiple correct answers per question. A quiz could break if an admin forgets to mark any choice as correct |
+
+---
+
+## 8. [QuizResult](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#147-158)
+```python
+class QuizResult(models.Model):
+    user = models.ForeignKey(User, ...)
+    quiz = models.ForeignKey(Quiz, ..., related_name='results')
+```
+| Pros | Cons / Problems |
+| :--- | :--- |
+| ✅ Tracks every attempt with score and pass/fail | ✅ `related_name='results'` makes queries clean |
+| ✅ Has `is_passed` for quick filtering | ✅ No major issues |
+
+---
+
+## Summary: Top 3 Things to Fix
+
+| Priority | Issue | Where |
+| :--- | :--- | :--- |
+| 🔴 **HIGH** | [completion_percentage](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#47-53) and [is_finished](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#54-67) still reference the old `is_done` on Lesson (which no longer exists). **This will crash.** | [Module](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#30-67) model |
+| 🟡 **MEDIUM** | Add `unique_together = ['user', 'lesson']` to [UserLessonProgress](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#88-97) to prevent duplicate rows | [UserLessonProgress](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#88-97) model |
+| 🟢 **LOW** | Remove the unused `number_of_try` field from [Quiz](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#102-124) | [Quiz](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#102-124) model |

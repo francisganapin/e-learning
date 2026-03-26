@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz Limit Reached | LearnFlow{% endblock %}
+
+{% block header %}Quiz Limit{% endblock %}
+
+{% block content %}
+<div class="view-container">
+    <div style="max-width: 600px; margin: 4rem auto; text-align: center; padding: 3rem; background: white; border-radius: 1rem; border: 1px solid var(--gray-100); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+        <div style="width: 64px; height: 64px; background: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+            <svg style="width: 32px; height: 32px; color: #ef4444;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+        </div>
+        
+        <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--gray-800); margin-bottom: 1rem;">Attempt Limit Reached</h1>
+        <p style="color: var(--gray-600); line-height: 1.6; margin-bottom: 2rem;">
+            You have already attempted the quiz <strong>"{{ quiz.title }}"</strong> 3 times. 
+            To ensure fair learning, we limit the number of attempts. Please contact your instructor if you need a reset.
+        </p>
+        
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+            <a href="{% url 'courses:view_module' quiz.module.course.id %}" class="btn btn-secondary" style="padding: 0.75rem 1.5rem; border-radius: 0.75rem; text-decoration: none; font-weight: 600; font-size: 0.875rem;">
+                Back to Course
+            </a>
+            <a href="{% url 'courses:view_courses' %}" class="btn btn-primary" style="padding: 0.75rem 1.5rem; border-radius: 0.75rem; text-decoration: none; font-weight: 600; font-size: 0.875rem;">
+                Browse Other Courses
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+# Quiz Attempt Tracking: Global vs. Per-User
+
+### Approach 1: Global Counter (Your Current Code)
+This uses the `number_of_try` field directly on the [Quiz](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#74-91) model.
+
+**Pros:**
+- **Very Simple**: One line of code to check, one line to update.
+- **Easy UI**: You can quickly show "Total times this quiz has ever been taken by anyone."
+
+**Cons:**
+- **🚨 THE MULTI-STUDENT BUG**: This is a global shared variable. If "John" takes the quiz 3 times, the field becomes 3. When "Mary" logs in for the first time, she is blocked because the counter is already at 3!
+- **Analogy**: It's like writing the number of tries on the **test paper** itself instead of on the **student's scorecard**.
+
+---
+
+### Approach 2: Per-User Tracking (Recommended)
+This counts how many [QuizResult](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#113-124) objects exist for the **specific user**.
+
+**Pros:**
+- **Independent Progress**: Student A’s attempts never affect Student B. This is how 100% of real e-learning platforms (like Udemy or Coursera) work.
+- **Accurate History**: You can see a full list of every attempt, when it happened, and which one was the best.
+- **Resetting**: A "Reset" button only clears the data for the **current student**, not the whole school.
+
+**Cons:**
+- Requires a slightly more complex query in the view: `QuizResult.objects.filter(user=user, quiz=quiz).count()`.
+
+---
+
+### Which one to use?
+- If this is a **single-player** local app for just you: **Global** is fine.
+- If you want **even two people** to use the website at the same time: **Per-User** is required.
+
+---
+
+### Code Examples
+
+#### Global Reset (Shared by everyone)
+```python
+def reset_global_quiz_tries(request, quiz_id):
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    quiz.number_of_try = 0
+    quiz.save()
+    return redirect('courses:view_quiz', quiz_id=quiz_id)
+```
+
+#### Per-User Reset (Professional way)
+```python
+def reset_user_quiz_results(request, quiz_id):
+    # Deletes ONLY this user's results so they can try again fresh
+    QuizResult.objects.filter(user=request.user, quiz_id=quiz_id).delete()
+    return redirect('courses:view_quiz', quiz_id=quiz_id)
+```
+

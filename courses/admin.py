@@ -30,6 +30,7 @@ class QuizInline(nested_admin.NestedStackedInline):
 class LessonInline(nested_admin.NestedStackedInline):
     model = Lesson
     extra = 1
+    prepopulated_fields = {'slug': ('title',)}
 
 class ModuleInline(nested_admin.NestedStackedInline):
     model = Module

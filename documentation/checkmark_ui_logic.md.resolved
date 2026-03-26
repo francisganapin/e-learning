@@ -1,0 +1,44 @@
+# Simplified Guide: How Lesson Checkmarks Work
+
+I know it can be a lot! Let's break down exactly how that "✅ Checkmark" appears on your screen using three simple steps.
+
+---
+
+## 1. The Python Step (The "Sticker" 🏷️)
+Inside your [views.py](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/views.py), the computer does the hard work before showing the page.
+
+```python
+# The computer checks the database:
+if user_has_finished_lesson:
+    lesson.user_is_done = True  # We slap a "Done" sticker on the lesson
+```
+
+## 2. The HTML Step (The "If" Rule ❓)
+Inside your [view_module.html](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/templates/courses/view_module.html), we look for that sticker.
+
+```html
+{% if lesson.user_is_done %}
+    ✓ (Show the checkmark)
+{% else %}
+    1 (Show the lesson number)
+{% endif %}
+```
+
+## 3. The CSS Step (The "Color" 🎨)
+We also change the background color based on that same sticker:
+
+*   **If Sticker Found**: Background becomes **Emerald Green**.
+*   **If No Sticker**: Background stays **Gray**.
+
+---
+
+## 🏁 Summary: A Simple "True or False"
+Think of `user_is_done` as a simple light switch:
+
+*   **Switch ON (True)**: Student finished it -> Show **✓** + **Green**.
+*   **Switch OFF (False)**: Student hasn't finished -> Show **Number** + **Gray**.
+
+### Why do we do this?
+Because "Completion" is handled by the **UserLessonProgress** table. Since every student is different, we have to check that table for *every* lesson before we draw the page.
+
+Does that help clear it up? We're just checking a list and slapping a "Done" sticker on anything the student has finished! 🏷️🚀

@@ -7,47 +7,300 @@
 {% load youtube_filter %}
 {% load markdown_to_html %}
 
-
 {% block content %}
-<div class="view-container">
-    <div style="max-width: 900px; margin: 0 auto;">
-        <!-- Lesson Header -->
-        <div class="detail-header">
-            <div class="badge badge-emerald">Lesson Content</div>
-            <h1 class="detail-title">{{ lesson.title }}</h1>
-        </div>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500;600&display=swap');
 
-        {% if lesson.video_file %}
-            <!-- If you uploaded a file directly -->
-            <video width="100%" controls style="border-radius: 1.5rem; background: black;">
-                <source src="{{ lesson.video_file.url }}" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-        {% elif lesson.video_url %}
-            <!-- If you provided a YouTube/external link -->
-            <iframe src="{{ lesson.video_url|to_embed_url }}" ...></iframe>
-        {% endif %}
+  :root {
+    --ink: #1a1a1a;
+    --ink-soft: #4a4a4a;
+    --ink-muted: #8a8a8a;
+    --paper: #faf9f7;
+    --paper-warm: #f3f1ec;
+    --rule: #e8e5df;
+    --accent: #c8522a;
+    --accent-light: #fdf0ea;
+    --success: #2a7a4a;
+    --success-light: #eaf5ef;
+    --radius: 4px;
+    --radius-lg: 10px;
+  }
 
+  body {
+    background: var(--paper);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink);
+  }
 
-        <!-- Lesson Body -->
-        <div class="article-content">
-                {{ lesson.content|markdown|safe }}
-        </div>
+  .lesson-shell {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 6rem;
+  }
 
-        <!-- Navigation Buttons -->
-  <!-- Replace your current Mark as Complete button with this -->
-        <form action="{% url 'courses:complete_lesson' lesson.id %}" method="POST">
-            {% csrf_token %}
-            {% if lesson.is_done %}
-                <button type="button" class="btn" style="background: var(--emerald-100); color: var(--emerald-700);" disabled>
-                    ✓ Completed
-                </button>
-            {% else %}
-                <button type="submit" class="btn btn-primary">
-                    Mark as Complete
-                </button>
-            {% endif %}
-        </form>
+  /* ── Breadcrumb ── */
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 2.5rem;
+  }
+  .breadcrumb a {
+    color: var(--ink-muted);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .breadcrumb a:hover { color: var(--accent); }
+  .breadcrumb-sep {
+    color: var(--rule);
+    font-size: 0.9rem;
+  }
+  .breadcrumb-current { color: var(--ink-soft); }
+
+  /* ── Lesson header ── */
+  .lesson-header {
+    border-top: 2px solid var(--ink);
+    padding-top: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .lesson-header h1 {
+    font-family: 'Lora', Georgia, serif;
+    font-size: clamp(1.6rem, 4vw, 2.25rem);
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--ink);
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  /* ── Video ── */
+  .lesson-video {
+    margin-bottom: 2.5rem;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--rule);
+    background: #111;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  }
+  .lesson-video video,
+  .lesson-video iframe {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: none;
+  }
+
+  /* ── Divider ── */
+  .rule {
+    border: none;
+    border-top: 1px solid var(--rule);
+    margin: 2rem 0;
+  }
+
+  /* ── Article content ── */
+  .article-content {
+    font-family: 'Lora', Georgia, serif;
+    font-size: 1.05rem;
+    line-height: 1.85;
+    color: var(--ink-soft);
+  }
+  .article-content h1,
+  .article-content h2,
+  .article-content h3,
+  .article-content h4 {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 2rem 0 0.75rem;
+  }
+  .article-content h2 { font-size: 1.25rem; }
+  .article-content h3 { font-size: 1.05rem; }
+  .article-content p { margin: 0 0 1.25rem; }
+  .article-content a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
+  .article-content ul,
+  .article-content ol {
+    padding-left: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .article-content li { margin-bottom: 0.4rem; }
+  .article-content code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    background: var(--paper-warm);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 0.15em 0.4em;
+    color: var(--ink);
+  }
+  .article-content pre {
+    background: var(--ink);
+    color: #e8e5df;
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+    font-size: 0.88rem;
+    line-height: 1.7;
+  }
+  .article-content pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+  }
+  .article-content blockquote {
+    border-left: 3px solid var(--accent);
+    margin: 1.5rem 0;
+    padding: 0.25rem 0 0.25rem 1.25rem;
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+  .article-content img {
+    max-width: 100%;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--rule);
+    margin: 1rem 0;
+  }
+
+  /* ── Actions row ── */
+  .lesson-actions {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  .btn-complete {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.4rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, transform 0.1s;
+    letter-spacing: 0.01em;
+    text-decoration: none;
+  }
+  .btn-complete:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .btn-complete:active { transform: translateY(0); }
+
+  .btn-completed {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.4rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--success);
+    background: var(--success-light);
+    color: var(--success);
+    cursor: default;
+    letter-spacing: 0.01em;
+  }
+
+  .btn-back {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--ink-muted);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: color 0.15s;
+  }
+  .btn-back:hover { color: var(--ink); }
+  .btn-back svg { flex-shrink: 0; }
+</style>
+
+<div class="lesson-shell">
+
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="{% url 'courses:view_courses' %}">Courses</a>
+    <span class="breadcrumb-sep">/</span>
+    <a href="{% url 'courses:view_module' module.course.id %}">{{ module.title }}</a>
+    <span class="breadcrumb-sep">/</span>
+    <span class="breadcrumb-current">{{ lesson.title|truncatechars:36 }}</span>
+  </nav>
+
+  <!-- Lesson Header -->
+  <header class="lesson-header">
+    <h1>{{ lesson.title }}</h1>
+  </header>
+
+  <!-- Video -->
+  {% if lesson.video_file %}
+    <div class="lesson-video">
+      <video controls>
+        <source src="{{ lesson.video_file.url }}" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
     </div>
+  {% elif lesson.video_url %}
+    <div class="lesson-video">
+      <iframe src="{{ lesson.video_url|to_embed_url }}" allowfullscreen></iframe>
+    </div>
+  {% endif %}
+
+  <!-- Body -->
+  {% if lesson.content %}
+    <hr class="rule">
+    <div class="article-content">
+      {{ lesson.content|markdown|safe }}
+    </div>
+  {% endif %}
+
+  <!-- Actions -->
+  <div class="lesson-actions">
+    <form action="{% url 'courses:complete_lesson' lesson.id %}" method="POST" style="margin:0;">
+      {% csrf_token %}
+      {% if lesson.is_done %}
+        <span class="btn-completed">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M2 7l3.5 3.5L12 3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Completed
+        </span>
+      {% else %}
+        <button type="submit" class="btn-complete">
+          Mark as Complete
+        </button>
+      {% endif %}
+    </form>
+
+    <a href="{% url 'courses:view_module' module.course.id %}" class="btn-back">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Back to module
+    </a>
+  </div>
+
 </div>
 {% endblock %}

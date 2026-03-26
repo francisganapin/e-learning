@@ -1,12 +1,15 @@
 {% extends 'base.html' %}
 
-{% block title %}All Courses | LearnFlow{% endblock %}
+{% block title %}Courses | LearnFlow{% endblock %}
 
-{% block header %}Available Courses{% endblock %}
+{% block header %}My Courses{% endblock %}
 
 {% block content %}
 <div class="view-container">
-    <h1 class="view-header">Let's Learn Something New!</h1>
+    <div style="margin-bottom: 2rem;">
+        <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--gray-800);">Browse Courses</h1>
+        <p style="color: var(--gray-400); margin-top: 0.25rem; font-size: 0.875rem;">{{ courses|length }} course{{ courses|length|pluralize }} available</p>
+    </div>
 
     {% if courses %}
     <div class="card-grid">
@@ -16,17 +19,14 @@
                 {% if course.image %}
                 <img src="{{ course.image.url }}" alt="{{ course.title }}" class="card-image">
                 {% else %}
-                <div class="card-placeholder">Course</div>
+                <div class="card-placeholder">{{ course.title|truncatechars:12 }}</div>
                 {% endif %}
-                <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.2), transparent);"></div>
             </div>
 
             <div class="card-body">
-                <div class="badge-wrapper">
-                    <span class="badge badge-emerald">{{ course.category.title }}</span>
-                </div>
+                <span style="font-size: 0.7rem; font-weight: 600; color: var(--emerald-600); text-transform: uppercase; letter-spacing: 0.04em;">{{ course.category.title }}</span>
 
-                <h2 class="card-title line-clamp-2">{{ course.title }}</h2>
+                <h2 class="card-title line-clamp-2" style="margin-top: 0.5rem;">{{ course.title }}</h2>
 
                 <div class="card-meta">
                     <div class="instructor-info">
@@ -45,7 +45,7 @@
                 </p>
 
                 <a href="{% url 'courses:view_module' course.id %}" class="btn btn-primary">
-                    Explore Modules
+                    View Modules
                 </a>
             </div>
         </div>
@@ -59,7 +59,7 @@
             </svg>
         </div>
         <h3 class="empty-state-title">No courses yet</h3>
-        <p class="empty-state-text">Our instructors are busy preparing high-quality content. Check back later!</p>
+        <p class="empty-state-text">Check back later for new content.</p>
     </div>
     {% endif %}
 </div>

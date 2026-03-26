@@ -1,0 +1,77 @@
+# Review of Your Model Edits
+
+You made great progress editing [courses/models.py](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py), but there are a few **syntax typos** in your code that will cause your Django app to crash right now. This is very common when typing out code manually!
+
+Here is what is lacking in your current code and the Pros/Cons of the fixes.
+
+---
+
+## 🚨 Critical Bug 1: [completion_percentage](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#47-61) (Lines 47-60)
+
+### What's wrong:
+1.  **`@property` block**: You left `@property` above the function. Properties *cannot* take arguments like [user](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#140-144), so Django will crash saying `NameError: name 'user' is not defined`.
+2.  **`self.lesson`**: It should be `self.lessons.count()` (plural), because the `related_name` in the Lesson model is `lessons`.
+
+### ✅ The Fix:
+Remove `@property` and add [user](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#140-144) inside the parenthesis.
+
+```python
+    def completion_percentage(self, user):   # <--- REMOVED @property, ADDED user
+        from .models import UserLessonProgress
+
+        total = self.lessons.count()         # <--- Plural 'lessons'
+        if total == 0: return 0
+
+        done = UserLessonProgress.objects.filter(
+            user=user,
+            lesson__module=self,
+            is_done=True
+        ).count()
+
+        return int((done/total) * 100)
+```
+*   **Pros**: Actually works. It is now a function you can call with the current logged-in user.
+*   **Cons**: None.
+
+---
+
+## 🚨 Critical Bug 2: Typos in [is_finished](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#62-81) (Lines 62-80)
+
+There are 3 variable spelling mistakes in this function. Python is extremely strict about spelling!
+
+### What's wrong:
+1.  Line 65: You typed `total_lesson` (singular), but on Line 73 you tried to use `total_lessons` (plural).
+2.  Line 76: You typed `quiz.result`, but it must be `quiz.results` (plural, because of the `related_name` on QuizResult).
+3.  Line 80: You typed `lesson_all_done` (singular), but on Line 73 you defined it as `lessons_all_done` (plural).
+
+### ✅ The Fix:
+I have corrected the spelling for you here. Replace your whole [is_finished](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py#62-81) method with this:
+
+```python
+    def is_finished(self, user):
+        from .models import UserLessonProgress
+
+        total_lessons = self.lessons.count()    # <--- Plural
+
+        done_lessons = UserLessonProgress.objects.filter(
+            user=user,
+            lesson__module=self,
+            is_done=True
+        ).count()
+
+        lessons_all_done = total_lessons > 0 and done_lessons == total_lessons
+
+        quizzes_all_passed = all(
+            quiz.results.filter(user=user, is_passed=True).exists()  # <--- Plural 'results'
+            for quiz in self.quizzes.all()
+        )
+
+        return lessons_all_done and quizzes_all_passed  # <--- Plural 'lessons'
+```
+*   **Pros**: Prevents `NameError` and `AttributeError` crashes in Django.
+*   **Cons**: None.
+
+---
+
+## Summary
+You have the logic exactly right! You just had a few small typos with singular vs. plural words ([lesson](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/views.py#16-22) instead of `lessons`). Update your [courses/models.py](file:///c:/Users/francis/OneDrive/Desktop/DJANGO%20PROJECT/e-learning/courses/models.py) with the 2 blocks above and your models are 100% good to go.
